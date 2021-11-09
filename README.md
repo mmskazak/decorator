@@ -137,121 +137,119 @@
     
     ## 3.Вариант
     
-    <?php
-
-interface IGetData {
-  /**
-   * Делает запрос на внешний API и
-   * возвращает результат в виде массива.
-   *
-   * @param array $request
-   * @return array
-   */
-  public function getResponseData(array $request): array;
-}
+    interface IGetData {
+      /**
+       * Делает запрос на внешний API и
+       * возвращает результат в виде массива.
+       *
+       * @param array $request
+       * @return array
+       */
+      public function getResponseData(array $request): array;
+    }
 
 
-class DataProvider implements IGetData {
-  private string $host;
-  private string $user; // User
-  private string $password;
+    class DataProvider implements IGetData {
+      private string $host;
+      private string $user; // User
+      private string $password;
 
-  /**
-   * @param string $host
-   * @param string $user
-   * @param string $password
-   */
-  public function __construct(string $host, string $user, string $password) {
-    $this->host = $host;
-    $this->user = $user;
-    $this->password = $password;
-  }
+      /**
+       * @param string $host
+       * @param string $user
+       * @param string $password
+       */
+      public function __construct(string $host, string $user, string $password) {
+        $this->host = $host;
+        $this->user = $user;
+        $this->password = $password;
+      }
 
-  /**
-   * @param array $request
-   * @return array
-   */
-  public function getResponseData(array $request): array {
-    //запрос данных
-    //возвращается фейковый массив
-    return [$this->host, $this->user, $this->password];
-  }
-}
-
-
-class BaseDecorator implements IGetData {
-
-  protected IGetData $data;
-
-  public function __construct(IGetData $data) {
-    $this->data = $data;
-  }
-
-  public function getResponseData(array $request): array {
-    return $this->data->getResponseData($request);
-  }
-
-}
-
-class CacheDataDecorator extends BaseDecorator {
-
-  protected CacheItemPoolInterface $cache;
-
-  public function __construct(IGetData $data, CacheItemPoolInterface $cache) {
-    parent::__construct($data);
-    $this->cache = $cache;
-  }
-
-  /**
-   * @param array $request
-   * @return array
-   */
-  public function getResponseData(array $request): array {
-
-    $responseArray = $this->data->getResponseData($request);
-    //Создание кеша
-    //$this->cache->
-    return $responseArray;
-  }
-
-}
+          /**
+           * @param array $request
+           * @return array
+           */
+          public function getResponseData(array $request): array {
+            //запрос данных
+            //возвращается фейковый массив
+            return [$this->host, $this->user, $this->password];
+          }
+        }
 
 
-class LoggerDecorator extends BaseDecorator {
+        class BaseDecorator implements IGetData {
 
-  protected LoggerInterface $logger;
+          protected IGetData $data;
 
-  public function __construct(IGetData $data, LoggerInterface $logger) {
-    parent::__construct($data);
-    $this->logger = $logger;
-  }
+          public function __construct(IGetData $data) {
+            $this->data = $data;
+          }
 
-  /**
-   * @param array $request
-   * @return array
-   */
-  public function getResponseData(array $request): array {
+          public function getResponseData(array $request): array {
+            return $this->data->getResponseData($request);
+          }
 
-    $responseArray = $this->data->getResponseData($request);
-    //Логирование
-    //$this->logger->
-    return $responseArray;
-  }
-}
+        }
+
+        class CacheDataDecorator extends BaseDecorator {
+
+          protected CacheItemPoolInterface $cache;
+
+          public function __construct(IGetData $data, CacheItemPoolInterface $cache) {
+            parent::__construct($data);
+            $this->cache = $cache;
+          }
+
+          /**
+           * @param array $request
+           * @return array
+           */
+          public function getResponseData(array $request): array {
+
+            $responseArray = $this->data->getResponseData($request);
+            //Создание кеша
+            //$this->cache->
+            return $responseArray;
+          }
+
+        }
 
 
-class Client {
+        class LoggerDecorator extends BaseDecorator {
 
-  /**
-   * @param CacheItemPoolInterface $cache
-   * @param LoggerInterface $logger
-   */
-  public function doSomeTask(CacheItemPoolInterface $cache,LoggerInterface $logger): void {
-    $dataProvider = new DataProvider('https://api.something.ru/v2/something', 'misha', 'password');
-    $baseDecorator = new BaseDecorator($dataProvider);
-    $cacheDataDecorator = new CacheDataDecorator($baseDecorator, $cache);
-    $loggerDecorator = new LoggerDecorator($cacheDataDecorator, $logger);
-    $loggerDecorator->getResponseData();
-  }
-}
+          protected LoggerInterface $logger;
+
+          public function __construct(IGetData $data, LoggerInterface $logger) {
+            parent::__construct($data);
+            $this->logger = $logger;
+          }
+
+          /**
+           * @param array $request
+           * @return array
+           */
+          public function getResponseData(array $request): array {
+
+            $responseArray = $this->data->getResponseData($request);
+            //Логирование
+            //$this->logger->
+            return $responseArray;
+          }
+        }
+
+
+        class Client {
+
+          /**
+           * @param CacheItemPoolInterface $cache
+           * @param LoggerInterface $logger
+           */
+          public function doSomeTask(CacheItemPoolInterface $cache,LoggerInterface $logger): void {
+            $dataProvider = new DataProvider('https://api.something.ru/v2/something', 'misha', 'password');
+            $baseDecorator = new BaseDecorator($dataProvider);
+            $cacheDataDecorator = new CacheDataDecorator($baseDecorator, $cache);
+            $loggerDecorator = new LoggerDecorator($cacheDataDecorator, $logger);
+            $loggerDecorator->getResponseData();
+          }
+        }
 
