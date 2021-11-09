@@ -165,35 +165,35 @@
         $this->password = $password;
       }
 
-          /**
-           * @param array $request
-           * @return array
-           */
-          public function getResponseData(array $request): array {
+      /**
+       * @param array $request
+       * @return array
+       */
+       public function getResponseData(array $request): array {
             //запрос данных
             //возвращается фейковый массив
             return [$this->host, $this->user, $this->password];
           }
-        }
+       }
 
 
-        class BaseDecorator implements IGetData {
+    class BaseDecorator implements IGetData {
 
-          protected IGetData $data;
+        protected IGetData $data;
 
-          public function __construct(IGetData $data) {
+        public function __construct(IGetData $data) {
             $this->data = $data;
-          }
+         }
 
-          public function getResponseData(array $request): array {
+        public function getResponseData(array $request): array {
             return $this->data->getResponseData($request);
-          }
+         }
 
-        }
+     }
 
-        class CacheDataDecorator extends BaseDecorator {
+    class CacheDataDecorator extends BaseDecorator {
 
-          protected CacheItemPoolInterface $cache;
+         protected CacheItemPoolInterface $cache;
 
           public function __construct(IGetData $data, CacheItemPoolInterface $cache) {
             parent::__construct($data);
@@ -211,45 +211,44 @@
             //$this->cache->
             return $responseArray;
           }
-
         }
 
 
-        class LoggerDecorator extends BaseDecorator {
+    class LoggerDecorator extends BaseDecorator {
 
-          protected LoggerInterface $logger;
+         protected LoggerInterface $logger;
 
-          public function __construct(IGetData $data, LoggerInterface $logger) {
-            parent::__construct($data);
-            $this->logger = $logger;
-          }
+         public function __construct(IGetData $data, LoggerInterface $logger) {
+           parent::__construct($data);
+           $this->logger = $logger;
+         }
 
-          /**
-           * @param array $request
-           * @return array
-           */
-          public function getResponseData(array $request): array {
+         /**
+          * @param array $request
+          * @return array
+          */
+         public function getResponseData(array $request): array {
 
-            $responseArray = $this->data->getResponseData($request);
-            //Логирование
-            //$this->logger->
-            return $responseArray;
-          }
-        }
+           $responseArray = $this->data->getResponseData($request);
+           //Логирование
+           //$this->logger->
+           return $responseArray;
+         }
+       }
 
 
-        class Client {
+    class Client {
 
-          /**
-           * @param CacheItemPoolInterface $cache
-           * @param LoggerInterface $logger
-           */
+         /**
+          * @param CacheItemPoolInterface $cache
+          * @param LoggerInterface $logger
+          */
           public function doSomeTask(CacheItemPoolInterface $cache,LoggerInterface $logger): void {
-            $dataProvider = new DataProvider('https://api.something.ru/v2/something', 'misha', 'password');
-            $baseDecorator = new BaseDecorator($dataProvider);
-            $cacheDataDecorator = new CacheDataDecorator($baseDecorator, $cache);
-            $loggerDecorator = new LoggerDecorator($cacheDataDecorator, $logger);
-            $loggerDecorator->getResponseData();
-          }
+          $dataProvider = new DataProvider('https://api.something.ru/v2/something', 'misha', 'password');
+          $baseDecorator = new BaseDecorator($dataProvider);
+          $cacheDataDecorator = new CacheDataDecorator($baseDecorator, $cache);
+          $loggerDecorator = new LoggerDecorator($cacheDataDecorator, $logger);
+          $loggerDecorator->getResponseData();
         }
+     }
 
